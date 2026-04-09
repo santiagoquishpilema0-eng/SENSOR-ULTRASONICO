@@ -1,12 +1,101 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Sensor Humedad</title>
-</head>
-<body style="text-align:center; font-family:Arial;">
+<meta charset="UTF-8">
+<title>Sensor Humedad</title>
 
-<h1>🌱 Humedad</h1>
-<h2 id="valor">45%</h2>
+<style>
+body {
+  background: linear-gradient(135deg, #1e1e2f, #2c2c54);
+  color: white;
+  font-family: Arial;
+  text-align: center;
+}
+
+.card {
+  margin: 50px auto;
+  padding: 30px;
+  width: 300px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.05);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.valor {
+  font-size: 60px;
+  font-weight: bold;
+  margin: 20px 0;
+}
+
+.barra {
+  width: 100%;
+  height: 20px;
+  background: #333;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progreso {
+  height: 100%;
+  width: 0%;
+  background: green;
+  transition: 0.5s;
+}
+
+.estado {
+  margin-top: 15px;
+  font-size: 18px;
+}
+</style>
+
+</head>
+<body>
+
+<div class="card">
+  <h2>🌱 Humedad</h2>
+
+  <div class="valor" id="valor">--%</div>
+
+  <div class="barra">
+    <div class="progreso" id="barra"></div>
+  </div>
+
+  <div class="estado" id="estado">Cargando...</div>
+</div>
+
+<script>
+
+// 🔥 CAMBIA ESTE VALOR LUEGO POR EL REAL
+let humedad = 45;
+
+// actualizar UI
+function actualizar(valor){
+  document.getElementById("valor").innerText = valor + "%";
+  document.getElementById("barra").style.width = valor + "%";
+
+  let color = "";
+  let estado = "";
+
+  if(valor < 30){
+    color = "#ff4d4d";
+    estado = "Seco 🥵";
+  } else if(valor < 60){
+    color = "#ffaa00";
+    estado = "Normal 🙂";
+  } else {
+    color = "#00ff88";
+    estado = "Húmedo 💧";
+  }
+
+  document.getElementById("barra").style.background = color;
+  document.getElementById("valor").style.color = color;
+  document.getElementById("estado").innerText = estado;
+}
+
+// ejecutar
+actualizar(humedad);
+
+</script>
 
 </body>
 </html>
