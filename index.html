@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Sensor Humedad</title>
+<title>Sensor de Humedad</title>
 
 <style>
 body {
@@ -65,10 +65,31 @@ body {
 
 <script>
 
-// 🔥 CAMBIA ESTE VALOR LUEGO POR EL REAL
-let humedad = 45;
+// 🔐 TU TOKEN (cámbialo luego por seguridad)
+const token = "c59bdf0e-30f2-4b0a-b931-9c3fd843229b";
 
-// actualizar UI
+// 🔄 OBTENER DATOS DE TAGO
+async function obtenerDatos() {
+  try {
+    const res = await fetch("https://api.tago.io/data?variable=Humidity&qty=1", {
+      headers: {
+        "Device-Token": token
+      }
+    });
+
+    const data = await res.json();
+
+    if(data.result && data.result.length > 0){
+      let valor = data.result[0].value;
+      actualizar(valor);
+    }
+
+  } catch (error) {
+    console.log("Error:", error);
+  }
+}
+
+// 🎨 ACTUALIZAR INTERFAZ
 function actualizar(valor){
   document.getElementById("valor").innerText = valor + "%";
   document.getElementById("barra").style.width = valor + "%";
@@ -92,8 +113,11 @@ function actualizar(valor){
   document.getElementById("estado").innerText = estado;
 }
 
-// ejecutar
-actualizar(humedad);
+// ⏱️ ACTUALIZA CADA 5 SEGUNDOS
+setInterval(obtenerDatos, 5000);
+
+// 🚀 PRIMERA EJECUCIÓN
+obtenerDatos();
 
 </script>
 
