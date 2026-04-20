@@ -1,125 +1,79 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Sensor de Humedad</title>
-
-<style>
-body {
-  background: linear-gradient(135deg, #1e1e2f, #2c2c54);
-  color: white;
-  font-family: Arial;
-  text-align: center;
-}
-
-.card {
-  margin: 50px auto;
-  padding: 30px;
-  width: 300px;
-  border-radius: 20px;
-  background: rgba(255,255,255,0.05);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-}
-
-.valor {
-  font-size: 60px;
-  font-weight: bold;
-  margin: 20px 0;
-}
-
-.barra {
-  width: 100%;
-  height: 20px;
-  background: #333;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.progreso {
-  height: 100%;
-  width: 0%;
-  background: green;
-  transition: 0.5s;
-}
-
-.estado {
-  margin-top: 15px;
-  font-size: 18px;
-}
-</style>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Mecatrónica - Santiago</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #0b0e11; color: #e9ecef; text-align: center; padding: 50px; }
+        .container { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+        .card { background: #1a1d21; border: 1px solid #343a40; border-radius: 15px; padding: 25px; width: 200px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .card h3 { color: #00d4ff; margin-bottom: 10px; font-size: 1.1rem; }
+        .value { font-size: 2.5rem; font-weight: bold; margin: 10px 0; }
+        .unit { color: #6c757d; font-size: 1rem; }
+        .status { margin-top: 20px; font-size: 0.8rem; color: #28a745; }
+    </style>
 </head>
 <body>
 
-<div class="card">
-  <h2>🌱 Humedad</h2>
+    <h1>PROYECTO MECATRÓNICA 2026</h1>
+    <p>Datos en tiempo real desde ESP32</p>
 
-  <div class="valor" id="valor">--%</div>
+    <div class="container">
+        <div class="card">
+            <h3>Temperatura</h3>
+            <div id="temp" class="value">--</div>
+            <span class="unit">°C</span>
+        </div>
+        <div class="card">
+            <h3>Humedad</h3>
+            <div id="hum" class="value">--</div>
+            <span class="unit">%</span>
+        </div>
+        <div class="card">
+            <h3>Índice Calor</h3>
+            <div id="hic" class="value">--</div>
+            <span class="unit">°C</span>
+        </div>
+    </div>
 
-  <div class="barra">
-    <div class="progreso" id="barra"></div>
-  </div>
+    <p id="update-time" class="status">Esperando datos...</p>
 
-  <div class="estado" id="estado">Cargando...</div>
-</div>
+    <script>
+        // --- CONFIGURACIÓN IMPORTANTE ---
+        // El Device-Token es el mismo que usaste en Arduino
+        const DEVICE_TOKEN = "c59bdf0e-30f2-4b0a-b931-9c3fd843229b"; 
 
-<script>
+        async function leerTagoIO() {
+            const url = "https://api.tago.io/data?qty=1";
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: { 'Device-Token': DEVICE_TOKEN }
+                });
+                const data = await response.json();
 
-// 🔐 TU TOKEN (cámbialo luego por seguridad)
-const token = "c59bdf0e-30f2-4b0a-b931-9c3fd843229b";
+                if (data.status && data.result.length > 0) {
+                    // Buscamos las variables en los resultados
+                    data.result.forEach(item => {
+                        if (item.variable === "Temperature") document.getElementById('temp').innerText = item.value;
+                        if (item.variable === "Humidity") document.getElementById('hum').innerText = item.value;
+                        if (item.variable === "HIndex") document.getElementById('hic').innerText = item.value;
+                    });
+                    
+                    const ahora = new Date().toLocaleTimeString();
+                    document.getElementById('update-time').innerText = "Última actualización: " + ahora;
+                }
+            } catch (error) {
+                console.error("Error al leer de TagoIO:", error);
+                document.getElementById('update-time').innerText = "Error de conexión";
+            }
+        }
 
-// 🔄 OBTENER DATOS DE TAGO
-async function obtenerDatos() {
-  try {
-    const res = await fetch("https://api.tago.io/data?variable=Humidity&qty=1", {
-      headers: {
-        "Device-Token": token
-      }
-    });
-
-    const data = await res.json();
-
-    if(data.result && data.result.length > 0){
-      let valor = data.result[0].value;
-      actualizar(valor);
-    }
-
-  } catch (error) {
-    console.log("Error:", error);
-  }
-}
-
-// 🎨 ACTUALIZAR INTERFAZ
-function actualizar(valor){
-  document.getElementById("valor").innerText = valor + "%";
-  document.getElementById("barra").style.width = valor + "%";
-
-  let color = "";
-  let estado = "";
-
-  if(valor < 30){
-    color = "#ff4d4d";
-    estado = "Seco 🥵";
-  } else if(valor < 60){
-    color = "#ffaa00";
-    estado = "Normal 🙂";
-  } else {
-    color = "#00ff88";
-    estado = "Húmedo 💧";
-  }
-
-  document.getElementById("barra").style.background = color;
-  document.getElementById("valor").style.color = color;
-  document.getElementById("estado").innerText = estado;
-}
-
-// ⏱️ ACTUALIZA CADA 5 SEGUNDOS
-setInterval(obtenerDatos, 5000);
-
-// 🚀 PRIMERA EJECUCIÓN
-obtenerDatos();
-
-</script>
-
+        // Actualizar la pantalla cada 5 segundos
+        setInterval(leerTagoIO, 5000);
+        leerTagoIO(); // Carga inicial
+    </script>
 </body>
 </html>
