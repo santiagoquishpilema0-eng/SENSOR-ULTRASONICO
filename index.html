@@ -2,81 +2,52 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Control de Movimiento - Ultrasónico</title>
-
+<title>Control de Carro - Ultrasónico</title>
 <style>
-body {
-  background: #1e1e2f;
-  color: white;
-  font-family: Arial, sans-serif;
-  text-align: center;
-  margin: 0;
-  overflow-x: hidden;
-}
+  body { background: #1e1e2f; color: white; font-family: sans-serif; text-align: center; }
+  
+  .pista {
+    position: relative;
+    width: 80%;
+    height: 120px;
+    margin: 50px auto;
+    background: #333;
+    border-bottom: 4px solid #555;
+    border-radius: 15px;
+  }
 
-.escenario {
-  position: relative;
-  width: 90%;
-  height: 200px;
-  margin: 50px auto;
-  background: #333;
-  border-bottom: 5px solid #555;
-  border-radius: 10px;
-  overflow: hidden;
-}
+  #carro {
+    position: absolute;
+    bottom: 10px;
+    left: 0%;
+    font-size: 60px;
+    transition: left 0.3s ease-out; /* Animación suave */
+  }
 
-/* El Carrito */
-#carrito {
-  position: absolute;
-  bottom: 10px;
-  left: 0%; /* Esto lo moveremos con JS */
-  font-size: 50px;
-  transition: all 0.5s ease-out;
-}
+  .medidor {
+    font-size: 48px;
+    margin: 20px;
+    color: #00ff88;
+  }
 
-.lineas-pista {
-  position: absolute;
-  top: 50%;
-  width: 100%;
-  height: 2px;
-  border-top: 2px dashed #777;
-}
-
-.panel-info {
-  background: rgba(255,255,255,0.1);
-  display: inline-block;
-  padding: 20px;
-  border-radius: 15px;
-}
-
-#distancia-texto {
-  font-size: 40px;
-  font-weight: bold;
-  color: #00ff88;
-}
+  .alerta { color: #ff4d4d; font-weight: bold; display: none; }
 </style>
 </head>
 <body>
 
-  <h1>📡 Monitor Ultrasónico</h1>
+  <h1>Control de Interfaz por Distancia</h1>
+  
+  <div class="medidor" id="txt-dist">-- cm</div>
+  <div id="alerta-choque" class="alerta">¡COLISIÓN DETECTADA! ⚠️</div>
 
-  <div class="panel-info">
-    <p>Distancia del Sensor:</p>
-    <div id="distancia-texto">-- cm</div>
+  <div class="pista">
+    <div id="carro">🚗</div>
   </div>
-
-  <div class="escenario">
-    <div class="lineas-pista"></div>
-    <div id="carrito">🚗</div> 
-  </div>
-
-  <p id="estado">Conectando con TagoIO...</p>
 
 <script>
-// 🔐 TU TOKEN
 const token = "e8e28909-6ba4-4f64-8ce4-e301adfd7a85";
 
-async function obtenerDistancia() {
+async function actualizar() {
   try {
     const res = await fetch("https://api.tago.io/data?variable=Distance&qty=1", {
       headers: { "Device-Token": token }
@@ -84,48 +55,36 @@ async function obtenerDistancia() {
     const data = await res.json();
 
     if(data.result && data.result.length > 0){
-      let valor = parseFloat(data.result[0].value).toFixed(1);
-      actualizarAnimacion(valor);
+      let d = parseFloat(data.result[0].value);
+      moverCarro(d);
     }
-  } catch (error) {
-    console.log("Error:", error);
-    document.getElementById("estado").innerText = "Error de conexión";
-  }
+  } catch (e) { console.log("Error:", e); }
 }
 
-function actualizarAnimacion(distancia) {
-  const carro = document.getElementById("carrito");
-  const texto = document.getElementById("distancia-texto");
-  
-  texto.innerText = distancia + " cm";
+function moverCarro(distancia) {
+  const carro = document.getElementById("carro");
+  const texto = document.getElementById("txt-dist");
+  const alerta = document.getElementById("alerta-choque");
 
-  // LÓGICA DE MOVIMIENTO:
-  // Supongamos que tu sensor mide de 2cm a 100cm.
-  // Convertimos ese rango a porcentaje (0% a 90% de la pantalla)
-  
-  let maxDistancia = 50; // Ajusta esto según el largo de tu mesa o proyecto
-  let porcentaje = (distancia / maxDistancia) * 90;
+  texto.innerText = distancia.toFixed(1) + " cm";
 
-  // Limitar para que el carro no se salga de la pantalla
-  if (porcentaje > 90) porcentaje = 90;
-  if (porcentaje < 0) porcentaje = 0;
-
-  // Aplicar movimiento
-  carro.style.left = porcentaje + "%";
-
-  // Cambiar color del texto si está muy cerca
-  if (distancia < 10) {
-    texto.style.color = "#ff4d4d"; // Rojo (Peligro)
-    document.getElementById("estado").innerText = "¡Objeto muy cerca!";
+  // Lógica para detectar el "Cero" o proximidad extrema
+  if (distancia <= 2) {
+    carro.style.left = "0%";
+    texto.style.color = "#ff4d4d";
+    alerta.style.display = "block";
   } else {
-    texto.style.color = "#00ff88"; // Verde (Ok)
-    document.getElementById("estado").innerText = "Distancia normal";
+    // Mapeo: 50cm será el final de la pista (90%)
+    let pos = (distancia / 50) * 90;
+    if (pos > 90) pos = 90;
+    
+    carro.style.left = pos + "%";
+    texto.style.color = "#00ff88";
+    alerta.style.display = "none";
   }
 }
 
-// Actualizar cada segundo para que el movimiento sea fluido
-setInterval(obtenerDistancia, 1000);
-
+setInterval(actualizar, 1000);
 </script>
 </body>
 </html>
