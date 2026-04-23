@@ -1,54 +1,90 @@
-body {
-  margin: 0;
-  background: linear-gradient(135deg, #1e1e2f, #2c2c54);
-  color: white;
-  font-family: Arial, sans-serif;
-  text-align: center;
+const token = "e8e28909-6ba4-4f64-8ce4-e301adfd7a85";
+const variable = "Distance";
+
+let historial = [];
+
+// 🔊 sonido
+const beep = new Audio("https://www.soundjay.com/button/beep-07.wav");
+
+
+// 📊 gráfica
+const ctx = document.getElementById("grafica").getContext("2d");
+
+const chart = new Chart(ctx, {
+  type: "line",
+  data: {
+    labels: [],
+    datasets: [{
+      label: "Distancia (cm)",
+      data: [],
+      borderColor: "lime",
+      tension: 0.3
+    }]
+  }
+});
+
+
+async function actualizar() {
+  try {
+    const res = await fetch(`https://api.tago.io/data?variable=${variable}&qty=1`, {
+      headers: { "Device-Token": token }
+    });
+
+    const data = await res.json();
+
+    if (!data.result || data.result.length === 0) return;
+
+    let d = parseFloat(data.result[0].value);
+    if (isNaN(d)) return;
+
+    moverCarro(d);
+    actualizarGrafica(d);
+
+  } catch (e) {
+    console.log(e);
+  }
 }
 
-.titulo {
-  font-size: 40px;
-  color: cyan;
-  margin-top: 20px;
+
+function moverCarro(distancia) {
+  const carro = document.getElementById("carro");
+  const texto = document.getElementById("txt-dist");
+  const alerta = document.getElementById("alerta-choque");
+
+  texto.innerText = distancia.toFixed(1) + " cm";
+
+  if (distancia <= 5) {
+    carro.style.left = "0%";
+    texto.style.color = "red";
+    alerta.style.display = "block";
+
+    beep.play(); // 🔊 sonido
+  } else {
+    let pos = (distancia / 50) * 90;
+    if (pos > 90) pos = 90;
+
+    carro.style.left = pos + "%";
+    texto.style.color = "#00ff88";
+    alerta.style.display = "none";
+  }
 }
 
-.card {
-  border: 3px solid cyan;
-  padding: 20px;
-  margin: 30px auto;
-  border-radius: 15px;
-  width: 80%;
-  max-width: 500px;
-  background: rgba(255,255,255,0.05);
+
+function actualizarGrafica(valor) {
+  const tiempo = new Date().toLocaleTimeString();
+
+  chart.data.labels.push(tiempo);
+  chart.data.datasets[0].data.push(valor);
+
+  if (chart.data.labels.length > 10) {
+    chart.data.labels.shift();
+    chart.data.datasets[0].data.shift();
+  }
+
+  chart.update();
 }
 
-.medidor {
-  font-size: 50px;
-  margin: 20px;
-  color: #00ff88;
-}
 
-.alerta {
-  color: #ff4d4d;
-  font-weight: bold;
-  display: none;
-  margin-bottom: 10px;
-}
-
-.pista {
-  position: relative;
-  width: 100%;
-  height: 120px;
-  background: #333;
-  border-bottom: 4px solid #555;
-  border-radius: 15px;
-  overflow: hidden;
-}
-
-#carro {
-  position: absolute;
-  bottom: 10px;
-  left: 0%;
-  font-size: 60px;
-  transition: left 0.3s ease-out;
-}
+// 🔄 tiempo real
+setInterval(actualizar, 1000);
+actualizar();
