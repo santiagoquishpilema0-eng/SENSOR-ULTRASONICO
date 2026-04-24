@@ -2,38 +2,65 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>🚀 Sensor Ultrasónico PRO+</title>
+<title>📡 Smart Distance Monitor</title>
+
 <link rel="stylesheet" href="style.css">
 
-<!-- Librería para gráfica -->
+<!-- Fuente pro -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
+
+<!-- Chart -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 </head>
 <body>
 
-<h1 class="titulo">📡 Sensor Ultrasónico EN VIVO</h1>
+<div class="app">
 
-<div class="card">
+  <header>
+    <h1>📡 Smart Distance Monitor</h1>
+    <span id="estado" class="estado">Conectando...</span>
+  </header>
 
-  <div id="txt-dist" class="medidor">-- cm</div>
+  <main>
 
-  <div id="alerta-choque" class="alerta">
-    ⚠️ ¡COLISIÓN!
-  </div>
+    <!-- Medidor -->
+    <section class="card center">
+      <div id="txt-dist" class="distancia">-- cm</div>
+      <div class="sub">Distancia actual</div>
+    </section>
 
-  <!-- Radar -->
-  <div class="radar">
-    <div class="onda" id="onda"></div>
-    <div class="punto"></div>
-  </div>
+    <!-- Radar -->
+    <section class="card radar-card">
+      <div class="radar">
+        <div class="onda"></div>
+        <div class="onda delay"></div>
+        <div class="centro"></div>
+      </div>
+    </section>
 
-  <!-- Pista -->
-  <div class="pista">
-    <div id="carro">🚗</div>
-  </div>
+    <!-- Barra -->
+    <section class="card">
+      <div class="barra">
+        <div id="nivel"></div>
+      </div>
+    </section>
 
-  <!-- Gráfica -->
-  <canvas id="grafica"></canvas>
+    <!-- Carro -->
+    <section class="card pista">
+      <div id="carro">🚗</div>
+    </section>
+
+    <!-- Gráfica -->
+    <section class="card">
+      <canvas id="grafica"></canvas>
+    </section>
+
+  </main>
+
+  <footer>
+    <span>IoT • Tiempo real</span>
+  </footer>
 
 </div>
 
