@@ -1,28 +1,24 @@
 const token = "e8e28909-6ba4-4f64-8ce4-e301adfd7a85";
 const variable = "Distance";
 
-let historial = [];
+const estado = document.getElementById("estado");
+const texto = document.getElementById("txt-dist");
+const carro = document.getElementById("carro");
+const barra = document.getElementById("nivel");
 
-// 🔊 sonido
-const beep = new Audio("https://www.soundjay.com/button/beep-07.wav");
-
-
-// 📊 gráfica
+// gráfica
 const ctx = document.getElementById("grafica").getContext("2d");
-
 const chart = new Chart(ctx, {
   type: "line",
   data: {
     labels: [],
     datasets: [{
-      label: "Distancia (cm)",
       data: [],
-      borderColor: "lime",
+      borderColor: "#22c55e",
       tension: 0.3
     }]
   }
 });
-
 
 async function actualizar() {
   try {
@@ -35,46 +31,46 @@ async function actualizar() {
     if (!data.result || data.result.length === 0) return;
 
     let d = parseFloat(data.result[0].value);
-    if (isNaN(d)) return;
+    if (isNaN(d)) d = 0;
 
-    moverCarro(d);
-    actualizarGrafica(d);
+    actualizarUI(d);
 
   } catch (e) {
-    console.log(e);
+    estado.innerText = "Error conexión";
   }
 }
 
+function actualizarUI(d) {
+  texto.innerText = d.toFixed(1) + " cm";
 
-function moverCarro(distancia) {
-  const carro = document.getElementById("carro");
-  const texto = document.getElementById("txt-dist");
-  const alerta = document.getElementById("alerta-choque");
+  // mover carro
+  let pos = Math.min((d / 50) * 100, 100);
+  carro.style.left = pos + "%";
 
-  texto.innerText = distancia.toFixed(1) + " cm";
+  // barra
+  barra.style.width = pos + "%";
 
-  if (distancia <= 5) {
-    carro.style.left = "0%";
-    texto.style.color = "red";
-    alerta.style.display = "block";
-
-    beep.play(); // 🔊 sonido
-  } else {
-    let pos = (distancia / 50) * 90;
-    if (pos > 90) pos = 90;
-
-    carro.style.left = pos + "%";
-    texto.style.color = "#00ff88";
-    alerta.style.display = "none";
+  // estados y colores
+  if (d === 0) {
+    estado.innerText = "SIN DETECCIÓN";
+    barra.style.background = "gray";
+  } 
+  else if (d <= 5) {
+    estado.innerText = "PELIGRO";
+    barra.style.background = "red";
+  } 
+  else if (d <= 20) {
+    estado.innerText = "OBJETO CERCA";
+    barra.style.background = "orange";
+  } 
+  else {
+    estado.innerText = "LIBRE";
+    barra.style.background = "lime";
   }
-}
 
-
-function actualizarGrafica(valor) {
-  const tiempo = new Date().toLocaleTimeString();
-
-  chart.data.labels.push(tiempo);
-  chart.data.datasets[0].data.push(valor);
+  // gráfica
+  chart.data.labels.push("");
+  chart.data.datasets[0].data.push(d);
 
   if (chart.data.labels.length > 10) {
     chart.data.labels.shift();
@@ -84,7 +80,5 @@ function actualizarGrafica(valor) {
   chart.update();
 }
 
-
-// 🔄 tiempo real
 setInterval(actualizar, 1000);
 actualizar();
